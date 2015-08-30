@@ -1,24 +1,75 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "avl.h"
 #include <assert.h>
+
+#include "avl.h"
+
+typedef enum{
+	Clp_found = 0,
+	Clp_go_left = 1,
+	Clp_go_right = 2
+}clp_next_step_t;
+
+#define NOT_FOUND -1 /*special value to init the searched key*/
+
+/** 
+ * 
+ * @brief depending on the values of the current key and the provided search elements keys
+ *        decide in which direction to continue the search within the balanced binary tree and if
+ *        to continue search at all
+ *
+ * @param value_a 
+ * @param value_b 
+ * @param curr_key 
+ *
+ * @return 
+ */
+static clp_next_step_t get_next_clp_direction(int value_a, int value_b, int curr_key)
+{
+	if((value_a < curr_key) && (value_b < curr_key))
+		return Clp_go_left;
+	if((value_a > curr_key) && (value_b > curr_key))
+		return Clp_go_right;
+	return Clp_found;
+}
 
 /** 
  * 
  * @brief function to find the common lowest parent of two nodes 
  *       in the tree, described by there key values
  *
- * @param root - pointer to the root of the tree
+ * @param node - pointer to the current node of the tree that we traverse
  * @param value_a - one of the values describing first node
  * @param value_b - the other value describing second node
  * @param clp_key - pointer where to store the found node's key
  *
- * @return 1 if node is found otherwise 0
+ * @return 
+ * NOTE: presumption that the passed values for a and b are always present in the tree, 
+ *       so there is no case of not fount element we should handle
  */
-int find_clp_value(struct node *root, int value_a, int value_b, int *clp_key)
+void find_clp_value(struct node *node, int value_a, int value_b, int *clp_key)
 {
-	*clp_key = 30;
-	return 1;
+	clp_next_step_t next = Clp_found;
+
+	if((node == NULL) || (clp_key == NULL))
+		return;
+	if(*clp_key == NOT_FOUND){
+		*clp_key = node->key;
+	}
+	
+	next = get_next_clp_direction(value_a, value_b, node->key);
+	switch(next){
+	case Clp_found:
+		*clp_key = node->key;
+		return;
+	case Clp_go_left:
+		return find_clp_value(node->left, value_a, value_b, clp_key);
+	case Clp_go_right:
+		return find_clp_value(node->right, value_a, value_b, clp_key);
+	default:
+		return;
+	}
+	
 }
 
 /** 
@@ -33,7 +84,7 @@ int find_clp_value(struct node *root, int value_a, int value_b, int *clp_key)
 int main()
 {
   struct node *root = NULL;
-  int clp_key = -1;
+  int clp_key = NOT_FOUND;
  
   /* Constructing tree given in the above figure */
   root = insert(root, 10);
@@ -43,13 +94,23 @@ int main()
   root = insert(root, 50);
   root = insert(root, 25);
   root = insert(root, 35);
+  root = insert(root, 8);
+  root = insert(root, 11);
+  root = insert(root, 21);
+  root = insert(root, 26);
+  root = insert(root, 33);
+  root = insert(root, 37);
+  root = insert(root, 45);
+  root = insert(root, 53);
  
   /* The constructed AVL Tree would be
-            30
-           /  \
-         20   40
-        /  \  /  \
-       10  25 35   50
+              30
+           /     \
+         20       40
+        /  \     /   \
+       10  25    35   50
+	  / \  / \  / \   / \
+	8  11 21 26 33 37 45 53
   */
   printf("\n=================================================== \n");
   printf("Pre order traversal of the constructed AVL tree is: \n");
@@ -57,7 +118,19 @@ int main()
   printf("\n=================================================== \n");
 
   /*basic test for common parent of two nodes*/
-  assert( find_clp_value(root,20,40,&clp_key) == 1);
+  find_clp_value(root, 20, 40, &clp_key);
+  assert( clp_key == 30);
+
+  /*basic test for common parent of two nodes*/
+  find_clp_value(root, 10, 25, &clp_key);
+  assert( clp_key == 20);
+
+  /*basic test for common parent of two leaf nodes*/
+  find_clp_value(root, 53, 45, &clp_key);
+  assert( clp_key == 50);
+
+  /*test for common parent of leftmost and rightmost leaves - should be root*/
+  find_clp_value(root, 53, 8, &clp_key);
   assert( clp_key == 30);
  
   printf("\nTests passed OK!\n");

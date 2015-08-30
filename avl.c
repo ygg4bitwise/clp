@@ -4,6 +4,7 @@
  * @date   Sun Aug 30 11:14:33 2015
  * 
  * @brief  code taken directly from http://www.geeksforgeeks.org/avl-tree-set-1-insertion/
+ *         small modification made to accept only natural numbers (0,1,2,3...) as keys
  * 
  * 
  */
@@ -12,7 +13,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+
 #include "avl.h" 
+
  
 // A utility function to get maximum of two integers
 int max(int a, int b);
@@ -92,6 +96,9 @@ int getBalance(struct node *N)
  
 struct node* insert(struct node* node, int key)
 {
+	/*extra check to the original code to allow only natural numbers as keys*/
+	assert(key >= 0);
+
     /* 1.  Perform the normal BST rotation */
     if (node == NULL)
         return(newNode(key));
