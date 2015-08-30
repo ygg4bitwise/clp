@@ -7,7 +7,8 @@
 typedef enum{
 	Clp_found = 0,
 	Clp_go_left = 1,
-	Clp_go_right = 2
+	Clp_go_right = 2,
+	Clp_not_found = 3
 }clp_next_step_t;
 
 #define NOT_FOUND -1 /*special value to init the searched key*/
@@ -30,6 +31,8 @@ static clp_next_step_t get_next_clp_direction(int value_a, int value_b, int curr
 		return Clp_go_left;
 	if((value_a > curr_key) && (value_b > curr_key))
 		return Clp_go_right;
+	if((value_a == curr_key) ||(value_b == curr_key))
+		return Clp_not_found;
 	return Clp_found;
 }
 
@@ -53,18 +56,17 @@ void find_clp_value(struct node *node, int value_a, int value_b, int *clp_key)
 
 	if((node == NULL) || (clp_key == NULL))
 		return;
-	if(*clp_key == NOT_FOUND){
-		*clp_key = node->key;
-	}
-	
+
 	next = get_next_clp_direction(value_a, value_b, node->key);
 	switch(next){
 	case Clp_found:
 		*clp_key = node->key;
 		return;
 	case Clp_go_left:
+		*clp_key = node->key;
 		return find_clp_value(node->left, value_a, value_b, clp_key);
 	case Clp_go_right:
+		*clp_key = node->key;
 		return find_clp_value(node->right, value_a, value_b, clp_key);
 	default:
 		return;
@@ -118,20 +120,34 @@ int main()
   printf("\n=================================================== \n");
 
   /*basic test for common parent of two nodes*/
+  clp_key = NOT_FOUND;
   find_clp_value(root, 20, 40, &clp_key);
   assert( clp_key == 30);
 
   /*basic test for common parent of two nodes*/
+  clp_key = NOT_FOUND;
   find_clp_value(root, 10, 25, &clp_key);
   assert( clp_key == 20);
 
   /*basic test for common parent of two leaf nodes*/
+  clp_key = NOT_FOUND;
   find_clp_value(root, 53, 45, &clp_key);
   assert( clp_key == 50);
 
   /*test for common parent of leftmost and rightmost leaves - should be root*/
+  clp_key = NOT_FOUND;
   find_clp_value(root, 53, 8, &clp_key);
   assert( clp_key == 30);
+
+  /*test for common parent of parent and child - should be parent's parent*/
+  clp_key = NOT_FOUND;
+  find_clp_value(root, 53, 50, &clp_key);
+  assert( clp_key == 40);
+ 
+  /*test for common parent of root and one of its children - should be NOT_FOUND*/
+  clp_key = NOT_FOUND;
+  find_clp_value(root, 30, 40, &clp_key);
+  assert( clp_key == NOT_FOUND);
  
   printf("\nTests passed OK!\n");
   return 0;
